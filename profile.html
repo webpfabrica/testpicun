@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>War Tycoon - Клан</title>
     <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-database-compat.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -139,6 +142,15 @@
             transition: 0.3s;
         }
 
+        /* Page Management */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
         /* Hero Section */
         .hero {
             height: 100vh;
@@ -182,11 +194,21 @@
             box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
             border: none;
             cursor: pointer;
+            margin: 0 10px;
         }
 
         .cta-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(255, 107, 53, 0.5);
+        }
+
+        .cta-secondary {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+        }
+
+        .cta-secondary:hover {
+            box-shadow: 0 15px 40px rgba(40, 167, 69, 0.5);
         }
 
         @keyframes gradientShift {
@@ -261,7 +283,6 @@
 
         /* Profile Page Styles */
         .profile-page {
-            display: none;
             min-height: 100vh;
             padding-top: 100px;
         }
@@ -326,12 +347,127 @@
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
 
+        /* Join Page Styles */
+        .join-page {
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .join-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .requirements {
+            background: rgba(255, 107, 53, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .requirements h3 {
+            color: #ff6b35;
+            margin-bottom: 1rem;
+        }
+
+        .requirements ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .requirements li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .requirements li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
         /* Footer */
         footer {
             background: rgba(0, 0, 0, 0.8);
             text-align: center;
             padding: 2rem 0;
             margin-top: 100px;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 107, 53, 0.3);
+            border-radius: 50%;
+            border-top-color: #ff6b35;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success/Error Messages */
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #28a745;
+        }
+
+        .message.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #dc3545;
         }
 
         /* Responsive */
@@ -352,6 +488,11 @@
                 flex-direction: column;
                 gap: 0.5rem;
             }
+
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
         }
 
         /* Animations */
@@ -367,30 +508,6 @@
                 transform: translateY(0);
             }
         }
-
-        /* Custom Telegram Login Button */
-        .telegram-login-btn {
-            background: linear-gradient(45deg, #0088cc, #229ED9);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .telegram-login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
-        }
-
-
     </style>
 </head>
 <body>
@@ -399,14 +516,13 @@
         <nav class="container">
             <div class="logo">WAR TYCOON</div>
             <ul class="nav-links">
-                <li><a href="#home" onclick="showMainPage()">Главная</a></li>
-                <li><a href="#about">О клане</a></li>
-                <li><a href="#stats">Статистика</a></li>
-                <li><a href="#join">Присоединиться</a></li>
+                <li><a href="#" onclick="showPage('main')">Главная</a></li>
+                <li><a href="#" onclick="showPage('about')">О клане</a></li>
+                <li><a href="#" onclick="showPage('stats')">Статистика</a></li>
+                <li><a href="#" onclick="handleJoinClick()">Присоединиться</a></li>
             </ul>
             <div class="auth-section">
                 <div class="telegram-login-container" id="telegramLoginContainer">
-                    <!-- Настоящий Telegram Login Widget -->
                     <script async src="https://telegram.org/js/telegram-widget.js?22"
                             data-telegram-login="sprspartbot"
                             data-size="large"
@@ -428,16 +544,15 @@
         </nav>
     </header>
 
-
-
-    <!-- Main Content -->
-    <main id="mainContent">
+    <!-- Main Page -->
+    <div class="page active" id="mainPage">
         <!-- Hero Section -->
         <section class="hero" id="home">
             <div class="container">
                 <div class="hero-content">
                     <h1>LEGENDS CLAN</h1>
                     <p>Присоединяйся к элитному клану War Tycoon</p>
+                    <a href="#" onclick="handleJoinClick()" class="cta-button cta-secondary">Присоединиться к клану</a>
                     <a href="#about" class="cta-button">Узнать больше</a>
                 </div>
             </div>
@@ -491,39 +606,123 @@
                 </div>
             </div>
         </section>
-    </main>
+    </div>
 
     <!-- Profile Page -->
-    <div class="profile-page" id="profilePage">
+    <div class="page profile-page" id="profilePage">
         <div class="container">
             <div class="profile-header">
                 <img src="" alt="Profile Avatar" class="profile-avatar" id="profileAvatar">
                 <div class="profile-name" id="profileName">Имя пользователя</div>
                 <div class="profile-username" id="profileUsername">@username</div>
+                <div class="profile-status" id="profileStatus"></div>
             </div>
             
             <div class="profile-stats">
                 <div class="profile-stat">
-                    <div class="stat-number">156</div>
+                    <div class="stat-number" id="userBattles">0</div>
                     <div>Боев проведено</div>
                 </div>
                 <div class="profile-stat">
-                    <div class="stat-number">89%</div>
+                    <div class="stat-number" id="userWinRate">0%</div>
                     <div>Процент побед</div>
                 </div>
                 <div class="profile-stat">
-                    <div class="stat-number">2,450</div>
+                    <div class="stat-number" id="userExperience">0</div>
                     <div>Очков опыта</div>
                 </div>
                 <div class="profile-stat">
-                    <div class="stat-number">25</div>
+                    <div class="stat-number" id="userLevel">1</div>
                     <div>Уровень</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="stat-number" id="clanStatus">-</div>
+                    <div>Статус в клане</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="stat-number" id="joinDate">-</div>
+                    <div>Дата регистрации</div>
                 </div>
             </div>
 
             <div style="text-align: center;">
+                <button class="cta-button" onclick="showPage('main')">На главную</button>
                 <button class="logout-btn" onclick="logout()">Выйти</button>
-                <button class="cta-button" onclick="showMainPage()" style="margin-left: 1rem;">На главную</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Page -->
+    <div class="page join-page" id="joinPage">
+        <div class="container">
+            <h2 class="section-title">Присоединиться к клану</h2>
+            
+            <div class="join-form">
+                <div id="joinMessage"></div>
+                
+                <div class="requirements">
+                    <h3>Требования для вступления:</h3>
+                    <ul>
+                        <li>Минимальный уровень в игре: 20</li>
+                        <li>Активная игра (минимум 5 часов в неделю)</li>
+                        <li>Командный дух и готовность помогать союзникам</li>
+                        <li>Знание основных стратегий игры</li>
+                        <li>Дискорд для командного общения</li>
+                    </ul>
+                </div>
+
+                <form id="joinForm">
+                    <div class="form-group">
+                        <label for="gameLevel">Ваш уровень в игре *</label>
+                        <input type="number" id="gameLevel" name="gameLevel" required min="1" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gameExperience">Опыт игры (в месяцах) *</label>
+                        <select id="gameExperience" name="gameExperience" required>
+                            <option value="">Выберите опыт</option>
+                            <option value="0-1">Менее 1 месяца</option>
+                            <option value="1-3">1-3 месяца</option>
+                            <option value="3-6">3-6 месяцев</option>
+                            <option value="6-12">6-12 месяцев</option>
+                            <option value="12+">Более года</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="playTime">Сколько часов в неделю играете? *</label>
+                        <select id="playTime" name="playTime" required>
+                            <option value="">Выберите время</option>
+                            <option value="1-5">1-5 часов</option>
+                            <option value="5-10">5-10 часов</option>
+                            <option value="10-20">10-20 часов</option>
+                            <option value="20+">Более 20 часов</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="discordTag">Discord тег *</label>
+                        <input type="text" id="discordTag" name="discordTag" required placeholder="Например: Player#1234">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motivation">Почему хотите вступить в наш клан? *</label>
+                        <textarea id="motivation" name="motivation" required rows="4" placeholder="Расскажите о своих целях и мотивации..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="previousClans">Предыдущие кланы (если были)</label>
+                        <input type="text" id="previousClans" name="previousClans" placeholder="Название клана и причина ухода">
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button type="submit" class="cta-button">
+                            <span id="submitText">Отправить заявку</span>
+                            <span id="submitLoader" class="loading" style="display: none;"></span>
+                        </button>
+                        <button type="button" class="logout-btn" onclick="showPage('main')">Отмена</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -536,12 +735,73 @@
     </footer>
 
     <script>
+        // Firebase Configuration (замените на ваши данные)
+        const firebaseConfig = {
+            apiKey: "your-api-key-here",
+            authDomain: "your-project.firebaseapp.com",
+            databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Инициализация Firebase
+        let database;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.log('Firebase not configured, using local storage fallback');
+            database = null;
+        }
+
         // User data storage
         let currentUser = null;
+
+        // Page management
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            if (pageId === 'main') {
+                document.getElementById('mainPage').classList.add('active');
+            } else if (pageId === 'profile') {
+                document.getElementById('profilePage').classList.add('active');
+            } else if (pageId === 'join') {
+                document.getElementById('joinPage').classList.add('active');
+            }
+            
+            // Reset animations if returning to main page
+            if (pageId === 'main') {
+                setTimeout(() => {
+                    const animatedElements = document.querySelectorAll('.fade-in');
+                    animatedElements.forEach(el => {
+                        el.style.animation = 'none';
+                        el.offsetHeight; // Trigger reflow
+                        el.style.animation = null;
+                    });
+                }, 100);
+            }
+        }
+
+        // Handle join button click
+        function handleJoinClick() {
+            if (!currentUser) {
+                alert('Для присоединения к клану необходимо войти в систему через Telegram');
+                return;
+            }
+            showPage('join');
+        }
+
+        // Telegram authentication
         function onTelegramAuth(user) {
             console.log('Telegram auth successful:', user);
             
-            // Обрабатываем данные пользователя от Telegram
             currentUser = {
                 id: user.id,
                 firstName: user.first_name,
@@ -549,17 +809,108 @@
                 username: user.username || '',
                 photoUrl: user.photo_url || null,
                 authDate: user.auth_date,
-                hash: user.hash
+                hash: user.hash,
+                joinDate: new Date().toISOString(),
+                gameStats: {
+                    level: 1,
+                    battles: 0,
+                    wins: 0,
+                    experience: 0
+                },
+                clanStatus: 'Новичок'
             };
             
-            // Показываем профиль пользователя
+            // Save user to Firebase
+            saveUserToDatabase(currentUser);
+            
+            // Show user profile in header
             showUserProfile(currentUser);
             
-            // Уведомление об успешной авторизации
+            // Success notification
             setTimeout(() => {
-                alert(`Добро пожаловать, ${currentUser.firstName}! Переходим в ваш профиль...`);
-                showProfile();
+                alert(`Добро пожаловать, ${currentUser.firstName}!`);
             }, 1000);
+        }
+
+        // Save user to Firebase
+        async function saveUserToDatabase(user) {
+            if (!database) {
+                console.log('Database not available, saving to localStorage');
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                return;
+            }
+
+            try {
+                // Check if user already exists
+                const userRef = database.ref('users/' + user.id);
+                const snapshot = await userRef.once('value');
+                
+                if (snapshot.exists()) {
+                    // User exists, update last login
+                    await userRef.update({
+                        lastLogin: new Date().toISOString(),
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        username: user.username,
+                        photoUrl: user.photoUrl
+                    });
+                    console.log('User updated in database');
+                    
+                    // Load existing user data
+                    const existingUser = snapshot.val();
+                    currentUser = { ...currentUser, ...existingUser };
+                } else {
+                    // New user, save complete profile
+                    await userRef.set({
+                        ...user,
+                        registrationDate: new Date().toISOString(),
+                        lastLogin: new Date().toISOString(),
+                        status: 'active'
+                    });
+                    console.log('New user saved to database');
+                }
+                
+                updateUserStats();
+            } catch (error) {
+                console.error('Error saving user to database:', error);
+                // Fallback to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
+            }
+        }
+
+        // Load user from database
+        async function loadUserFromDatabase(userId) {
+            if (!database) {
+                const savedUser = localStorage.getItem('currentUser');
+                return savedUser ? JSON.parse(savedUser) : null;
+            }
+
+            try {
+                const userRef = database.ref('users/' + userId);
+                const snapshot = await userRef.once('value');
+                return snapshot.exists() ? snapshot.val() : null;
+            } catch (error) {
+                console.error('Error loading user from database:', error);
+                return null;
+            }
+        }
+
+        // Update user stats in database
+        async function updateUserInDatabase(userId, updates) {
+            if (!database) {
+                const savedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                const updatedUser = { ...savedUser, ...updates };
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                return;
+            }
+
+            try {
+                const userRef = database.ref('users/' + userId);
+                await userRef.update(updates);
+                console.log('User updated in database');
+            } catch (error) {
+                console.error('Error updating user in database:', error);
+            }
         }
 
         // Show user profile in header
@@ -572,23 +923,45 @@
             loginContainer.style.display = 'none';
             userProfile.style.display = 'flex';
             
-            // Устанавливаем аватар из Telegram
-            userAvatar.src = user.photoUrl || generateAvatar(user.firstName[0] + user.lastName[0]);
+            userAvatar.src = user.photoUrl || generateAvatar((user.firstName[0] || '') + (user.lastName[0] || ''));
             userAvatar.onerror = function() {
-                this.src = generateAvatar(user.firstName[0] + user.lastName[0]);
+                this.src = generateAvatar((user.firstName[0] || '') + (user.lastName[0] || ''));
             };
             
-            userName.textContent = user.username ? `@${user.username}` : `${user.firstName}`;
+            userName.textContent = user.username ? `@${user.username}` : user.firstName;
+            updateProfilePage(user);
+        }
 
-            // Update profile page
+        // Update profile page with user data
+        function updateProfilePage(user) {
             const profileAvatar = document.getElementById('profileAvatar');
-            profileAvatar.src = user.photoUrl || generateAvatar(user.firstName[0] + user.lastName[0]);
+            profileAvatar.src = user.photoUrl || generateAvatar((user.firstName[0] || '') + (user.lastName[0] || ''));
             profileAvatar.onerror = function() {
-                this.src = generateAvatar(user.firstName[0] + user.lastName[0]);
+                this.src = generateAvatar((user.firstName[0] || '') + (user.lastName[0] || ''));
             };
             
             document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
             document.getElementById('profileUsername').textContent = user.username ? `@${user.username}` : `ID: ${user.id}`;
+            document.getElementById('profileStatus').textContent = user.clanStatus || 'Новичок';
+            
+            updateUserStats();
+        }
+
+        // Update user statistics display
+        function updateUserStats() {
+            if (!currentUser) return;
+
+            const stats = currentUser.gameStats || {};
+            
+            document.getElementById('userBattles').textContent = stats.battles || 0;
+            document.getElementById('userWinRate').textContent = stats.battles ? 
+                Math.round(((stats.wins || 0) / stats.battles) * 100) + '%' : '0%';
+            document.getElementById('userExperience').textContent = (stats.experience || 0).toLocaleString();
+            document.getElementById('userLevel').textContent = stats.level || 1;
+            document.getElementById('clanStatus').textContent = currentUser.clanStatus || 'Новичок';
+            
+            const joinDate = new Date(currentUser.registrationDate || currentUser.joinDate);
+            document.getElementById('joinDate').textContent = joinDate.toLocaleDateString('ru-RU');
         }
 
         // Generate avatar with initials
@@ -601,18 +974,16 @@
             canvas.height = 100;
             const ctx = canvas.getContext('2d');
             
-            // Рисуем круг
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(50, 50, 40, 0, 2 * Math.PI);
             ctx.fill();
             
-            // Рисуем текст
             ctx.fillStyle = 'white';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(initials.toUpperCase(), 50, 50);
+            ctx.fillText((initials || '??').toUpperCase(), 50, 50);
             
             return canvas.toDataURL();
         }
@@ -624,8 +995,7 @@
                 return;
             }
             
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('profilePage').style.display = 'block';
+            showPage('profile');
             
             // Animate profile elements
             const profileStats = document.querySelectorAll('.profile-stat');
@@ -640,13 +1010,88 @@
             });
         }
 
-        // Show main page
-        function showMainPage() {
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('profilePage').style.display = 'none';
-        }
+        // Handle join form submission
+        document.getElementById('joinForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                alert('Необходимо войти в систему');
+                return;
+            }
 
-        // Logout
+            const submitBtn = document.getElementById('submitText');
+            const loader = document.getElementById('submitLoader');
+            const messageDiv = document.getElementById('joinMessage');
+            
+            // Show loading state
+            submitBtn.style.display = 'none';
+            loader.style.display = 'inline-block';
+
+            // Get form data
+            const formData = new FormData(e.target);
+            const applicationData = {
+                userId: currentUser.id,
+                userName: `${currentUser.firstName} ${currentUser.lastName}`,
+                userUsername: currentUser.username,
+                gameLevel: parseInt(formData.get('gameLevel')),
+                gameExperience: formData.get('gameExperience'),
+                playTime: formData.get('playTime'),
+                discordTag: formData.get('discordTag'),
+                motivation: formData.get('motivation'),
+                previousClans: formData.get('previousClans'),
+                applicationDate: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            try {
+                // Validate requirements
+                if (applicationData.gameLevel < 20) {
+                    throw new Error('Минимальный уровень для вступления: 20');
+                }
+
+                if (applicationData.playTime === '1-5') {
+                    throw new Error('Минимальное время игры: 5 часов в неделю');
+                }
+
+                // Save application to database
+                if (database) {
+                    const applicationRef = database.ref('applications/' + currentUser.id);
+                    await applicationRef.set(applicationData);
+                    
+                    // Update user status
+                    await updateUserInDatabase(currentUser.id, {
+                        applicationStatus: 'pending',
+                        applicationDate: applicationData.applicationDate
+                    });
+                } else {
+                    // Fallback to localStorage
+                    const applications = JSON.parse(localStorage.getItem('applications') || '{}');
+                    applications[currentUser.id] = applicationData;
+                    localStorage.setItem('applications', JSON.stringify(applications));
+                }
+
+                // Show success message
+                messageDiv.innerHTML = '<div class="message success">✅ Заявка успешно отправлена! Мы рассмотрим её в течение 24 часов.</div>';
+                e.target.reset();
+                
+                // Update current user status
+                currentUser.applicationStatus = 'pending';
+                
+                setTimeout(() => {
+                    showPage('main');
+                    alert('Заявка отправлена! Проверьте Discord для получения обновлений.');
+                }, 2000);
+
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">❌ ${error.message}</div>`;
+            } finally {
+                // Reset button state
+                submitBtn.style.display = 'inline';
+                loader.style.display = 'none';
+            }
+        });
+
+        // Logout function
         function logout() {
             if (confirm('Вы уверены, что хотите выйти?')) {
                 currentUser = null;
@@ -654,9 +1099,11 @@
                 // Reset UI
                 document.getElementById('telegramLoginContainer').style.display = 'flex';
                 document.getElementById('userProfile').style.display = 'none';
-                showMainPage();
+                showPage('main');
                 
-                // Show logout success
+                // Clear localStorage
+                localStorage.removeItem('currentUser');
+                
                 setTimeout(() => {
                     alert('Вы успешно вышли из системы');
                 }, 300);
@@ -700,6 +1147,26 @@
             }, 16);
         }
 
+        // Load clan statistics from database
+        async function loadClanStats() {
+            if (!database) return;
+
+            try {
+                const statsRef = database.ref('clanStats');
+                const snapshot = await statsRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const stats = snapshot.val();
+                    document.getElementById('members').textContent = stats.members || 45;
+                    document.getElementById('wins').textContent = stats.wins || 1247;
+                    document.getElementById('rank').textContent = stats.rank || 12;
+                    document.getElementById('level').textContent = stats.level || 89;
+                }
+            } catch (error) {
+                console.error('Error loading clan stats:', error);
+            }
+        }
+
         // Intersection Observer for animations
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
@@ -709,7 +1176,7 @@
                     
                     // Animate counters when stats section is visible
                     if (entry.target.closest('#stats')) {
-                        const counters = document.querySelectorAll('.stat-number');
+                        const counters = document.querySelectorAll('#mainPage .stat-number');
                         counters.forEach((counter, index) => {
                             const targets = [45, 1247, 12, 89];
                             setTimeout(() => {
@@ -777,27 +1244,27 @@
             }
         });
 
-        // ESC key to close modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeTelegramModal();
-            }
-        });
-
-        // Auto-login demo user on page load (для тестирования)
-        // Раскомментируйте следующие строки для автоматического входа при загрузке страницы:
-        /*
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (!currentUser && confirm('Выполнить демо-вход для тестирования?')) {
-                    simulateTelegramAuth();
+        // Check for saved user session on page load
+        window.addEventListener('load', async () => {
+            // Try to load from localStorage first
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    showUserProfile(currentUser);
+                    console.log('User session restored from localStorage');
+                } catch (error) {
+                    console.error('Error parsing saved user:', error);
+                    localStorage.removeItem('currentUser');
                 }
-            }, 1000);
-        });
-        */
+            }
 
-        console.log('War Tycoon website loaded successfully! 🎮');
-        console.log('Click "Войти через Telegram" to test the authentication flow.');
+            // Load clan statistics
+            loadClanStats();
+        });
+
+        console.log('War Tycoon website with Firebase integration loaded successfully! 🎮');
+        console.log('Features: User registration, profile management, clan applications');
     </script>
 </body>
 </html>
